@@ -21,8 +21,33 @@ public interface UserService {
      *
      * @param username
      * @param pwd
+     * @return
      */
     Users selectUser(String username, String pwd);
 
+    /**
+     * 保存用户
+     *
+     * @param user
+     * @return
+     */
     Users saveUser(Users user);
+
+    /**
+     * 保存头像
+     *
+     * @param userId
+     * @param url
+     * @return
+     */
+    Users saveUserFace(String userId, String url);
+
+    /**
+     * 设置昵称
+     *
+     * @param userId
+     * @param nickname
+     * @return
+     */
+    Users saveUserNickname(String userId, String nickname);
 }
