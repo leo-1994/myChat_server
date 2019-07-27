@@ -1,6 +1,11 @@
 package com.leo.chat.service;
 
+import com.leo.chat.enums.SearchFriendsStatusEnum;
+import com.leo.chat.pojo.entity.FriendsRequest;
 import com.leo.chat.pojo.entity.Users;
+import com.leo.chat.pojo.vo.FriendRequestVO;
+
+import java.util.List;
 
 /**
  * @author chao.li@quvideo.com
@@ -50,4 +55,55 @@ public interface UserService {
      * @return
      */
     Users saveUserNickname(String userId, String nickname);
+
+    /**
+     * 搜索朋友的前置
+     *
+     * @param myUserId
+     * @param friendUsername
+     * @return
+     */
+    SearchFriendsStatusEnum preconditionSearchFriends(String myUserId, String friendUsername);
+
+    /**
+     * 根据用户名查询用户
+     *
+     * @param username
+     * @return
+     */
+    Users selectUserByUsername(String username);
+
+    /**
+     * 保存添加好友请求
+     *
+     * @param myUserId
+     * @param friendUsername
+     * @return
+     */
+    void sendFriendsRequest(String myUserId, String friendUsername);
+
+    /**
+     * 获取好友请求列表
+     *
+     * @param userId
+     * @return
+     */
+    List<FriendRequestVO> getFriendRequestList(String userId);
+
+    /**
+     * 通过好友请求
+     *
+     * @param acceptUserId
+     * @param sendUserId
+     */
+    void passFriendRequest(String acceptUserId, String sendUserId);
+
+    /**
+     * 忽略好友请求
+     *
+     * @param acceptUserId
+     * @param sendUserId
+     */
+    void ignoreFriendRequest(String acceptUserId, String sendUserId);
+
 }

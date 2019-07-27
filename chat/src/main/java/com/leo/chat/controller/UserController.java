@@ -1,5 +1,7 @@
 package com.leo.chat.controller;
 
+import com.leo.chat.enums.OperateFriendRequestTypeEnum;
+import com.leo.chat.enums.SearchFriendsStatusEnum;
 import com.leo.chat.pojo.bo.UserBO;
 import com.leo.chat.pojo.entity.Users;
 import com.leo.chat.pojo.vo.ResultVO;
@@ -65,10 +67,11 @@ public class UserController {
     public ResultVO uploadFaceBase64(@RequestBody UserBO userBo) {
         // 获取前端传过来的base64字符串，然后转换为文件对象上传
         String base64Data = userBo.getFaceData();
-        String tempPath = "/Users/leo/tmp/" + userBo.getUserId() + "userface64.png";
+        File tempFile = null;
         try {
-            if (FileUtils.base64ToFile(tempPath, base64Data)) {
-                MultipartFile faceFile = FileUtils.fileToMultipart(tempPath);
+            tempFile = File.createTempFile("temp", ".png");
+            if (FileUtils.base64ToFile(tempFile.getPath(), base64Data)) {
+                MultipartFile faceFile = FileUtils.fileToMultipart(tempFile.getPath());
                 if (faceFile == null) {
                     return ResultVO.errorMsg("上传失败，无法转换文件");
                 }
@@ -83,12 +86,86 @@ public class UserController {
             log.error("上传出错,e:{}", e.toString());
             return ResultVO.errorMsg("上传失败");
         } finally {
-            org.apache.commons.io.FileUtils.deleteQuietly(new File(tempPath));
+            if (tempFile != null) {
+                if (!tempFile.delete()) {
+                    log.error("tempFile:{} 删除失败", tempFile.getPath());
+                }
+            }
         }
     }
 
     @PostMapping("/setNickname")
     public ResultVO setNickname(@RequestBody UserBO userBo) {
         return ResultVO.ok(userService.saveUserNickname(userBo.getUserId(), userBo.getNickname()));
+    }
+
+    /**
+     * 根据账号做匹配查询而不是模糊查询
+     *
+     * @param myUserId
+     * @param friendUsername
+     * @return
+     */
+    @PostMapping("/search")
+    public ResultVO searchUser(String myUserId, String friendUsername) {
+        // 判断 myUserId friendUsername 不能为空
+        if (StringUtils.isBlank(myUserId) || StringUtils.isBlank(friendUsername)) {
+            return ResultVO.errorMsg("");
+        }
+        // 搜索的用户不存在，返回无此用户
+        // 搜索的账号是自己，返回不能添加自己
+        // 搜索的朋友已经是你的好友，返回该用户已是你的好友
+        SearchFriendsStatusEnum status = userService.preconditionSearchFriends(myUserId, friendUsername);
+        if (!SearchFriendsStatusEnum.SUCCESS.equals(status)) {
+            return ResultVO.errorMsg(status.msg);
+        }
+        Users users = userService.selectUserByUsername(friendUsername);
+        UserVO userVO = new UserVO();
+        BeanUtils.copyProperties(users, userVO);
+        return ResultVO.ok(userVO);
+    }
+
+    /**
+     * 添加好友
+     *
+     * @param myUserId
+     * @param friendUsername
+     * @return
+     */
+    @PostMapping("/addFriendRequest")
+    public ResultVO addFriendRequest(String myUserId, String friendUsername) {
+// 判断 myUserId friendUsername 不能为空
+        if (StringUtils.isBlank(myUserId) || StringUtils.isBlank(friendUsername)) {
+            return ResultVO.errorMsg("");
+        }
+        // 搜索的用户不存在，返回无此用户
+        // 搜索的账号是自己，返回不能添加自己
+        // 搜索的朋友已经是你的好友，返回该用户已是你的好友
+        SearchFriendsStatusEnum status = userService.preconditionSearchFriends(myUserId, friendUsername);
+        if (!SearchFriendsStatusEnum.SUCCESS.equals(status)) {
+            return ResultVO.errorMsg(status.msg);
+        }
+        userService.sendFriendsRequest(myUserId, friendUsername);
+        return ResultVO.ok();
+    }
+
+    @PostMapping("/queryFriendRequests")
+    public ResultVO queryFriendRequests(String userId) {
+        return ResultVO.ok(userService.getFriendRequestList(userId));
+    }
+
+    @PostMapping("operateFriendRequest")
+    public ResultVO operateFriendRequest(String acceptUserId, String sendUserId, Integer operateType) {
+        if (StringUtils.isBlank(acceptUserId) || StringUtils.isBlank(sendUserId)) {
+            return ResultVO.errorMsg("");
+        }
+        if (OperateFriendRequestTypeEnum.IGNORE.code.equals(operateType)) {
+            userService.ignoreFriendRequest(acceptUserId, sendUserId);
+        } else if (OperateFriendRequestTypeEnum.PASS.code.equals(operateType)) {
+            userService.passFriendRequest(acceptUserId, sendUserId);
+        } else {
+            return null;
+        }
+        return ResultVO.ok();
     }
 }

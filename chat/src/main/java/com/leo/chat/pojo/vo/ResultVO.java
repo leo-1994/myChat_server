@@ -13,6 +13,10 @@ public class ResultVO {
     private String msg;
     private Object data;
 
+    private ResultVO(Integer code) {
+        this.code = code;
+    }
+
     private ResultVO(Integer code, String msg) {
         this.code = code;
         this.msg = msg;
@@ -25,6 +29,10 @@ public class ResultVO {
 
     public static ResultVO errorMsg(String msg) {
         return new ResultVO(CodeEnum.ERROR.code, msg);
+    }
+
+    public static ResultVO ok() {
+        return new ResultVO(CodeEnum.OK.code);
     }
 
     public static ResultVO ok(Object data) {
