@@ -1,9 +1,10 @@
 package com.leo.chat.service;
 
 import com.leo.chat.enums.SearchFriendsStatusEnum;
-import com.leo.chat.pojo.entity.FriendsRequest;
+import com.leo.chat.pojo.entity.ChatMsg;
 import com.leo.chat.pojo.entity.Users;
 import com.leo.chat.pojo.vo.FriendRequestVO;
+import com.leo.chat.pojo.vo.MyFriendsVO;
 
 import java.util.List;
 
@@ -106,4 +107,30 @@ public interface UserService {
      */
     void ignoreFriendRequest(String acceptUserId, String sendUserId);
 
+    /**
+     * 获取我的好友
+     *
+     * @param userId
+     * @return
+     */
+    List<MyFriendsVO> getMyFriends(String userId);
+
+    /**
+     * 保存聊天消息
+     *
+     * @param senderId
+     * @param receiverId
+     * @param msg
+     * @return
+     */
+    String saveChatMsg(String senderId, String receiverId, String msg);
+
+    /**
+     * 签收聊天消息
+     *
+     * @param msgIdList
+     */
+    void signedChatMsg(List<String> msgIdList);
+
+    List<ChatMsg> getUnReadMsgList(String userId);
 }

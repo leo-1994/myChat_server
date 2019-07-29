@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.util.ArrayList;
 
 /**
  * @author chao.li@quvideo.com
@@ -151,6 +152,9 @@ public class UserController {
 
     @PostMapping("/queryFriendRequests")
     public ResultVO queryFriendRequests(String userId) {
+        if (StringUtils.isBlank(userId)) {
+            return ResultVO.errorMsg("");
+        }
         return ResultVO.ok(userService.getFriendRequestList(userId));
     }
 
@@ -163,9 +167,21 @@ public class UserController {
             userService.ignoreFriendRequest(acceptUserId, sendUserId);
         } else if (OperateFriendRequestTypeEnum.PASS.code.equals(operateType)) {
             userService.passFriendRequest(acceptUserId, sendUserId);
-        } else {
-            return null;
         }
-        return ResultVO.ok();
+        return ResultVO.ok(userService.getMyFriends(acceptUserId));
     }
+
+    @PostMapping("/myFriends")
+    public ResultVO myFriends(String userId) {
+        if (StringUtils.isBlank(userId)) {
+            return ResultVO.errorMsg("");
+        }
+        return ResultVO.ok(userService.getMyFriends(userId));
+    }
+
+    @PostMapping("/getUnReadMsgList")
+    public ResultVO getUnReadMsgList(String acceptUserId) {
+        return ResultVO.ok(userService.getUnReadMsgList(acceptUserId));
+    }
+
 }

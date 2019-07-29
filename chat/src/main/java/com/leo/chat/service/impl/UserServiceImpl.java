@@ -1,10 +1,14 @@
 package com.leo.chat.service.impl;
 
+import com.leo.chat.enums.MsgSignFlagEnum;
 import com.leo.chat.enums.SearchFriendsStatusEnum;
+import com.leo.chat.pojo.entity.ChatMsg;
 import com.leo.chat.pojo.entity.FriendsRequest;
 import com.leo.chat.pojo.entity.MyFriends;
 import com.leo.chat.pojo.entity.Users;
 import com.leo.chat.pojo.vo.FriendRequestVO;
+import com.leo.chat.pojo.vo.MyFriendsVO;
+import com.leo.chat.repository.ChatMsgRepository;
 import com.leo.chat.repository.FriendsRequestRepository;
 import com.leo.chat.repository.MyFriendsRepository;
 import com.leo.chat.repository.UsersRepository;
@@ -46,15 +50,18 @@ public class UserServiceImpl implements UserService {
 
     private final FriendsRequestRepository friendsRequestRepository;
 
+    private final ChatMsgRepository chatMsgRepository;
+
     private final FastDFSClient fastDfsClient;
 
     @Autowired
-    public UserServiceImpl(Sid sid, UsersRepository usersRepository, FastDFSClient fastDfsClient, MyFriendsRepository myFriendsRepository, FriendsRequestRepository friendsRequestRepository) {
+    public UserServiceImpl(Sid sid, UsersRepository usersRepository, FastDFSClient fastDfsClient, MyFriendsRepository myFriendsRepository, FriendsRequestRepository friendsRequestRepository, ChatMsgRepository chatMsgRepository) {
         this.sid = sid;
         this.usersRepository = usersRepository;
         this.fastDfsClient = fastDfsClient;
         this.myFriendsRepository = myFriendsRepository;
         this.friendsRequestRepository = friendsRequestRepository;
+        this.chatMsgRepository = chatMsgRepository;
     }
 
     @Override
@@ -203,6 +210,49 @@ public class UserServiceImpl implements UserService {
             // 删除好友请求
             friendsRequestRepository.delete(request);
         }
+    }
+
+    @Override
+    public List<MyFriendsVO> getMyFriends(String userId) {
+        List<MyFriends> friendsList = myFriendsRepository.findAllByMyUserId(userId);
+        if (CollectionUtils.isEmpty(friendsList)) {
+            return new ArrayList<>();
+        }
+        return friendsList.stream().map(t -> {
+            Optional<Users> optional = usersRepository.findById(t.getMyFriendUserId());
+            if (!optional.isPresent()) {
+                return null;
+            }
+            Users user = optional.get();
+            return new MyFriendsVO(user);
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public String saveChatMsg(String senderId, String receiverId, String msg) {
+        ChatMsg chatMsg = new ChatMsg();
+        chatMsg.setId(sid.nextShort());
+        chatMsg.setAcceptUserId(receiverId);
+        chatMsg.setSendUserId(senderId);
+        chatMsg.setMsg(msg);
+        chatMsg.setCreateTime(new Date());
+        chatMsg.setSignFlag(MsgSignFlagEnum.UNSIGN.type);
+        chatMsgRepository.save(chatMsg);
+        return chatMsg.getId();
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void signedChatMsg(List<String> msgIdList) {
+        msgIdList.forEach(msgId -> chatMsgRepository.findById(msgId).ifPresent(chatMsg -> {
+            chatMsg.setSignFlag(MsgSignFlagEnum.SIGNED.type);
+            chatMsgRepository.save(chatMsg);
+        }));
+    }
+
+    @Override
+    public List<ChatMsg> getUnReadMsgList(String userId) {
+        return chatMsgRepository.findAllByAcceptUserIdAndSignFlag(userId, MsgSignFlagEnum.UNSIGN.type);
     }
 
     private static final String THUMP = "_80x80.";

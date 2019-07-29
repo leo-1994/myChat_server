@@ -23,7 +23,7 @@ public class ChatMsg {
 
     private String msg;
 
-    private Short signFlag;
+    private Integer signFlag;
 
     private Date createTime;
 }
