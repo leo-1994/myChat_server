@@ -12,6 +12,7 @@ import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.util.concurrent.GlobalEventExecutor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
 
@@ -25,12 +26,13 @@ import java.util.List;
  * @author chao.li@quvideo.com
  * @date 2019-07-17 19:00
  */
+@Slf4j
 public class ChatHandler extends SimpleChannelInboundHandler<TextWebSocketFrame> {
 
     /**
      * 用于记录和管理所有客户端的channel
      */
-    private static ChannelGroup users = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
+    public static ChannelGroup users = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 
     private static UserService userService;
 
@@ -47,6 +49,7 @@ public class ChatHandler extends SimpleChannelInboundHandler<TextWebSocketFrame>
         ChatMsg chatMsg = dataContent.getChatMsg();
         // 2.判断消息类型，根据不同的类型处理不同的业务
         if (MsgActionEnum.CONNECT.type.equals(action)) {
+            log.info("客户端连接，channel短id：{}", currentChannel.id().asShortText());
             //  2.1 当websocket 第一次open的时候，初始化channel，把用户的channel和userId关联起来
             String senderId = chatMsg.getSenderId();
             UserChannelRel.put(senderId, currentChannel);
@@ -91,7 +94,7 @@ public class ChatHandler extends SimpleChannelInboundHandler<TextWebSocketFrame>
             }
         } else if (MsgActionEnum.KEEPALIVE.type.equals(action)) {
             //  2.4 心跳类型的消息
-
+            log.info("收到心跳包，channel短id：{}", currentChannel.id().asShortText());
         }
     }
 
@@ -111,7 +114,6 @@ public class ChatHandler extends SimpleChannelInboundHandler<TextWebSocketFrame>
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
         // 当触发handlerRemoved，ChannelGroup会自动移除对应客户端的channel
         users.remove(ctx.channel());
-        System.out.println("客户端断开，channel长id为:" + ctx.channel().id().asLongText());
         System.out.println("客户端断开，channel短id为:" + ctx.channel().id().asShortText());
 
     }
