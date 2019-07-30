@@ -1,9 +1,9 @@
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: mychat_dev
-    password: leo199408
-    url: jdbc:mysql://47.100.250.156:3306/mychat_dev?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=GMT%2B8
+    username: mysql username
+    password: mysql password
+    url: mysql url
 server:
   tomcat:
     uri-encoding: UTF-8
@@ -14,4 +14,4 @@ fdfs:
     width: 80
     height: 80
   tracker-list:
-    - 104.198.89.63:22122
+    - FastDFS Url:port
