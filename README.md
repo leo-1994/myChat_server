@@ -4,7 +4,7 @@
 ###### 集成文件服务器FastDFS客户端
 ###### 使用前需先部署mysql和FastDFS
 
-###### 如果觉得FastDFS搭建毕竟麻烦，可以通过docker一键部署
+###### 如果觉得FastDFS搭建麻烦，可以通过docker一键部署
 > Dockerfile
 
 ```
